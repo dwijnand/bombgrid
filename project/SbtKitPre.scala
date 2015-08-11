@@ -10,4 +10,6 @@ object SbtKitPre {
   implicit class SettingKeyWithRemove[A](val _s: SettingKey[Seq[A]]) extends AnyVal {
     def -=(x: A): Setting[Seq[A]] = _s ~= (_ filterNot x.==)
   }
+
+  def Settings(settings: SettingsDefinition*): Seq[Setting[_]] = settings flatMap (_.settings)
 }
