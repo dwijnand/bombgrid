@@ -1,22 +1,8 @@
 import SbtKitPre._
 
-lazy val bombgrid = project in file(".") dependsOn (projectsCpDeps: _*) aggregate (projectsRefs: _*) settings(
-  settings0,
-  noArtifacts
-)
+lazy val bombgrid = project in file(".") settings settings
 
-lazy val projects = List(api, tui, aui, iui, gui, web)
-lazy val projectsCpDeps = projects.map(x => x: ClasspathDep[ProjectReference])
-lazy val projectsRefs   = projects.map(x => x: ProjectReference)
-
-lazy val api = project settings settings1
-lazy val tui = project settings settings1 dependsOn api
-lazy val aui = project settings settings1 dependsOn api
-lazy val iui = project settings settings1 dependsOn api
-lazy val gui = project settings settings1 dependsOn api
-lazy val web = project settings settings1 dependsOn api
-
-lazy val settings0 = Settings(
+lazy val settings = Settings(
   organization := "com.dwijnand",
        version := "0.1.0-SNAPSHOT",
 
@@ -60,15 +46,6 @@ lazy val settings0 = Settings(
   sources in (Compile, doc) := Nil,
   publishArtifact in (Compile, packageDoc) := false
 )
-
-val settings1 = Settings(
-  settings0,
-  name := s"bombgrid-${name.value}"
-)
-
-val noPackage = Settings(Keys.`package` := file(""), packageBin := file(""), packagedArtifacts := Map())
-val noPublish = Settings(publish :=(), publishLocal :=(), publishArtifact := false)
-val noArtifacts = Settings(noPackage, noPublish)
 
 watchSources ++= (baseDirectory.value * "*.sbt").get
 watchSources ++= (baseDirectory.value / "project" * "*.scala").get
