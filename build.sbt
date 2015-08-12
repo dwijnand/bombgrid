@@ -33,7 +33,9 @@ lazy val settings = Settings(
   wartremoverWarnings  += Wart.FinalCaseClass,
   wartremoverWarnings  += Wart.JavaConversions,
   wartremoverWarnings  += Wart.MutableDataStructures,
-  wartremoverWarnings  -= Wart.Throw, // Breaks on tuple destructuring
+  wartremoverWarnings  -= Wart.Product,      // Create any sealed hierachy with case class/object & BOOM :(
+  wartremoverWarnings  -= Wart.Serializable, // Create any sealed hierachy with case class/object & BOOM :(
+  wartremoverWarnings  -= Wart.Throw,        // Breaks on tuple destructuring
 
   initialCommands in console += "\nimport com.dwijnand.bombgrid._",
 
