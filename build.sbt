@@ -1,8 +1,6 @@
-import SbtKitPre._
+lazy val bombgrid = project in file(".") settings commonSettings
 
-lazy val bombgrid = project in file(".") settings settings
-
-lazy val settings = Settings(
+lazy val commonSettings = Settings(
   organization := "com.dwijnand",
        version := "0.1.0-SNAPSHOT",
 
@@ -51,3 +49,5 @@ lazy val settings = Settings(
 
 watchSources ++= (baseDirectory.value * "*.sbt").get
 watchSources ++= (baseDirectory.value / "project" * "*.scala").get
+
+def Settings(ss: SettingsDefinition*): Seq[Setting[_]] = ss.flatMap(_.settings)
