@@ -16,16 +16,13 @@ final case class Rng(seed: Long) extends AnyVal {
   def nextInt: (Int, Rng) = nextBits(32)
 
   def nextInt(bound: Int): (Int, Rng) = {
-    val b = nextBits(31)
-    val n = b._1
-    val rng = b._2
+    val (n, rng) = nextBits(31)
     val m = bound - 1
     if ((bound & m) == 0)  // i.e., bound is a power of 2
       ((bound * n.toLong) >> 31).toInt -> rng
     else {
       @tailrec def go(s: (Int, Rng)): (Int, Rng) = {
-        val n = s._1
-        val rng = s._2
+        val (n, rng) = s
         val r = n % bound
         if (n - r + m < 0) go(rng nextBits 31)
         else r -> rng
@@ -35,25 +32,21 @@ final case class Rng(seed: Long) extends AnyVal {
   }
 
   def chooseInt(lowerBound: Int, upperBound: Int): (Int, Rng) = {
-    val c = if (lowerBound < upperBound) lowerBound -> upperBound else upperBound -> lowerBound
-    val l = c._1
-    val h = c._2
+    val (l, h) = if (lowerBound < upperBound) lowerBound -> upperBound else upperBound -> lowerBound
 
     val diff = h - l
     if (diff == 0)
       (l, this)
     else {
-      val n = nextInt
-      val x = n._1
-      val rng = n._2
+      val (x, rng) = nextInt
       (l + (x.abs % (diff + 1)), rng)
     }
   }
 
   def choose[A](xs0: Traversable[A]): (A, Rng) = {
     val xs = xs0.toIndexedSeq
-    val c = chooseInt(0, xs.size - 1)
-    (xs(c._1), c._2)
+    val (i, rng) = chooseInt(0, xs.size - 1)
+    (xs(i), rng)
   }
 
   def shuffle[T, CC[X] <: TraversableOnce[X]](xs: CC[T])(implicit cbf: CBF[CC[T], T, CC[T]]): (CC[T], Rng) = {
@@ -66,9 +59,7 @@ final case class Rng(seed: Long) extends AnyVal {
     }
 
     val rng = (buf.length to 2 by -1).foldLeft(this) { (rng, n) =>
-      val i = rng nextInt n
-      val k = i._1
-      val rng2 = i._2
+      val (k, rng2) = rng nextInt n
       swap(n - 1, k)
       rng2
     }
@@ -76,6 +67,7 @@ final case class Rng(seed: Long) extends AnyVal {
     (cbf(xs) ++= buf).result() -> rng
   }
 }
+
 object Rng {
   private val multiplier = 0x5DEECE66DL
   private val increment = 0xBL
