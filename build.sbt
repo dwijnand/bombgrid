@@ -47,6 +47,7 @@ lazy val settings0 = Settings(
   wartremoverWarnings  += Wart.FinalCaseClass,
   wartremoverWarnings  += Wart.JavaConversions,
   wartremoverWarnings  += Wart.MutableDataStructures,
+  wartremoverWarnings  -= Wart.Throw, // Breaks on tuple destructuring
 
   initialCommands in console += "\nimport com.dwijnand.bombgrid._",
 
