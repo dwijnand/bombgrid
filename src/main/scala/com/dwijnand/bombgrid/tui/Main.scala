@@ -1,6 +1,8 @@
 package com.dwijnand.bombgrid
 package tui
 
+import scala.io.AnsiColor._
+
 object Main {
   def main(args: Array[String]): Unit = {
     val seed = Rng.randomSeed()
@@ -33,9 +35,16 @@ object Main {
 
     grid foreach { row =>
       println(row.map {
-        case BombCell     => "*"
+        case BombCell     => BLACK + BOLD + "*" + RESET
         case DigitCell(0) => " "
-        case DigitCell(n) => "" + n
+        case DigitCell(1) => BLUE + BOLD + "1" + RESET
+        case DigitCell(2) => GREEN + "2" + RESET
+        case DigitCell(3) => RED + BOLD + "3" + RESET
+        case DigitCell(4) => BLUE + "4" + RESET
+        case DigitCell(5) => RED + "5" + RESET
+        case DigitCell(6) => CYAN + "6" + RESET
+        case DigitCell(7) => MAGENTA + "7" + RESET
+        case DigitCell(8) => BOLD + "8" + RESET
       }.mkString)
     }
 
