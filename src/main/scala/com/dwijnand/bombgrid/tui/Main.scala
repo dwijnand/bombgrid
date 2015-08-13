@@ -32,7 +32,11 @@ object Main {
     }
 
     grid foreach { row =>
-      println(row.map { case BombCell => "*" ; case DigitCell(n) => "" + n }.mkString)
+      println(row.map {
+        case BombCell     => "*"
+        case DigitCell(0) => " "
+        case DigitCell(n) => "" + n
+      }.mkString)
     }
 
     ()
