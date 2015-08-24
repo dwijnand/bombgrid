@@ -20,7 +20,7 @@ object Main {
     val bombNoBombs =
       0 until size._2 map { y =>
         0 until size._1 map { x =>
-          x -> y -> (if (bombsCoords(x -> y)) IsBomb else NoBomb)
+          (x, y) -> (if (bombsCoords((x, y))) IsBomb else NoBomb)
         }
       }
 
@@ -52,16 +52,19 @@ object Main {
   }
 
   def sumBombs(grid: IndexedSeq[IndexedSeq[((Int, Int), BombNoBomb)]], xy: (Int, Int), size: (Int, Int)): Int = {
-    val ul = if (xy._2 > 0 && xy._1 > 0)           grid(xy._2 - 1)(xy._1 - 1)._2 else NoBomb
-    val uc = if (xy._2 > 0)                        grid(xy._2 - 1)(xy._1)._2     else NoBomb
-    val ur = if (xy._2 > 0 && xy._1 + 1 < size._1) grid(xy._2 - 1)(xy._1 + 1)._2 else NoBomb
+    val (x, y) = xy
+    val (size_x, size_y) = size
 
-    val cl = if (xy._1 > 0)           grid(xy._2)(xy._1 - 1)._2 else NoBomb
-    val cr = if (xy._1 + 1 < size._1) grid(xy._2)(xy._1 + 1)._2 else NoBomb
+    val ul = if (y > 0 && x > 0)          grid(y - 1)(x - 1)._2 else NoBomb
+    val uc = if (y > 0)                   grid(y - 1)(x)._2     else NoBomb
+    val ur = if (y > 0 && x + 1 < size_x) grid(y - 1)(x + 1)._2 else NoBomb
 
-    val dl = if (xy._2 + 1 < size._2 && xy._1 > 0)           grid(xy._2 + 1)(xy._1 - 1)._2 else NoBomb
-    val dc = if (xy._2 + 1 < size._2)                        grid(xy._2 + 1)(xy._1)._2     else NoBomb
-    val dr = if (xy._2 + 1 < size._2 && xy._1 + 1 < size._1) grid(xy._2 + 1)(xy._1 + 1)._2 else NoBomb
+    val cl = if (x > 0)          grid(y)(x - 1)._2 else NoBomb
+    val cr = if (x + 1 < size_x) grid(y)(x + 1)._2 else NoBomb
+
+    val dl = if (y + 1 < size_y && x > 0)          grid(y + 1)(x - 1)._2 else NoBomb
+    val dc = if (y + 1 < size_y)                   grid(y + 1)(x)._2     else NoBomb
+    val dr = if (y + 1 < size_y && x + 1 < size_x) grid(y + 1)(x + 1)._2 else NoBomb
 
     Vector(ul, uc, ur, cl, cr, dl, dc, dr).collect { case IsBomb => 1 }.sum
   }
