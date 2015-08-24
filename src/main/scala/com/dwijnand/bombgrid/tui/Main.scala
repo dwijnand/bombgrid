@@ -25,33 +25,36 @@ object Main {
     val bombNoBombs =
       0 until size._2 map { y =>
         0 until size._1 map { x =>
-          (x, y) -> (if (bombsCoords((x, y))) IsBomb else NoBomb)
+          if (bombsCoords((x, y))) IsBomb else NoBomb
         }
       }
 
-    def sumBombs(grid: IndexedSeq[IndexedSeq[((Int, Int), BombNoBomb)]], xy: (Int, Int)): Int = {
+    def sumBombs(grid: IndexedSeq[IndexedSeq[BombNoBomb]], xy: (Int, Int)): Int = {
       val (x, y) = xy
       val (size_x, size_y) = size
 
-      val ul = if (y > 0 && x > 0)          grid(y - 1)(x - 1)._2 else NoBomb
-      val uc = if (y > 0)                   grid(y - 1)(x)._2     else NoBomb
-      val ur = if (y > 0 && x + 1 < size_x) grid(y - 1)(x + 1)._2 else NoBomb
+      val ul = if (y > 0 && x > 0)          grid(y - 1)(x - 1) else NoBomb
+      val uc = if (y > 0)                   grid(y - 1)(x)     else NoBomb
+      val ur = if (y > 0 && x + 1 < size_x) grid(y - 1)(x + 1) else NoBomb
 
-      val cl = if (x > 0)          grid(y)(x - 1)._2 else NoBomb
-      val cr = if (x + 1 < size_x) grid(y)(x + 1)._2 else NoBomb
+      val cl = if (x > 0)          grid(y)(x - 1) else NoBomb
+      val cr = if (x + 1 < size_x) grid(y)(x + 1) else NoBomb
 
-      val dl = if (y + 1 < size_y && x > 0)          grid(y + 1)(x - 1)._2 else NoBomb
-      val dc = if (y + 1 < size_y)                   grid(y + 1)(x)._2     else NoBomb
-      val dr = if (y + 1 < size_y && x + 1 < size_x) grid(y + 1)(x + 1)._2 else NoBomb
+      val dl = if (y + 1 < size_y && x > 0)          grid(y + 1)(x - 1) else NoBomb
+      val dc = if (y + 1 < size_y)                   grid(y + 1)(x)     else NoBomb
+      val dr = if (y + 1 < size_y && x + 1 < size_x) grid(y + 1)(x + 1) else NoBomb
 
       Vector(ul, uc, ur, cl, cr, dl, dc, dr).collect { case IsBomb => 1 }.sum
     }
 
     val grid = {
-      bombNoBombs map { row =>
-        row map {
-          case (xy, NoBomb) => DigitCell(sumBombs(bombNoBombs, xy))
-          case (_, IsBomb)  => BombCell
+      bombNoBombs.indices map { y =>
+        val row = bombNoBombs(y)
+        row.indices map { x =>
+          row(x) match {
+            case NoBomb => DigitCell(sumBombs(bombNoBombs, (x, y)))
+            case IsBomb => BombCell
+          }
         }
       }
     }
