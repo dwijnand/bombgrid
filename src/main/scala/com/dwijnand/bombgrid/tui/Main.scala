@@ -38,16 +38,16 @@ object Main {
     grid foreach { row =>
       println(row.map { b =>
         if (b.revealed) b.cell match {
-          case BombCell                => BLACK + BOLD + "*" + RESET
-          case DigitCell(BombCount._0) => " "
-          case DigitCell(BombCount._1) => BLUE + BOLD + "1" + RESET
-          case DigitCell(BombCount._2) => GREEN + "2" + RESET
-          case DigitCell(BombCount._3) => RED + BOLD + "3" + RESET
-          case DigitCell(BombCount._4) => BLUE + "4" + RESET
-          case DigitCell(BombCount._5) => RED + "5" + RESET
-          case DigitCell(BombCount._6) => CYAN + "6" + RESET
-          case DigitCell(BombCount._7) => MAGENTA + "7" + RESET
-          case DigitCell(BombCount._8) => BOLD + "8" + RESET
+          case BombCell               => BLACK + BOLD + "*" + RESET
+          case DigitCell(BombCount_0) => " "
+          case DigitCell(BombCount_1) => BLUE + BOLD + "1" + RESET
+          case DigitCell(BombCount_2) => GREEN + "2" + RESET
+          case DigitCell(BombCount_3) => RED + BOLD + "3" + RESET
+          case DigitCell(BombCount_4) => BLUE + "4" + RESET
+          case DigitCell(BombCount_5) => RED + "5" + RESET
+          case DigitCell(BombCount_6) => CYAN + "6" + RESET
+          case DigitCell(BombCount_7) => MAGENTA + "7" + RESET
+          case DigitCell(BombCount_8) => BOLD + "8" + RESET
         } else "#"
       }.mkString)
     }
@@ -61,16 +61,16 @@ case object IsBomb extends BombNoBomb
 case object NoBomb extends BombNoBomb
 
 sealed trait BombCount extends Any { def value: Int }
+case object BombCount_0 extends BombCount { val value = 0 }
+case object BombCount_1 extends BombCount { val value = 1 }
+case object BombCount_2 extends BombCount { val value = 2 }
+case object BombCount_3 extends BombCount { val value = 3 }
+case object BombCount_4 extends BombCount { val value = 4 }
+case object BombCount_5 extends BombCount { val value = 5 }
+case object BombCount_6 extends BombCount { val value = 6 }
+case object BombCount_7 extends BombCount { val value = 7 }
+case object BombCount_8 extends BombCount { val value = 8 }
 object BombCount {
-  case object _0 extends BombCount { val value = 0 }
-  case object _1 extends BombCount { val value = 1 }
-  case object _2 extends BombCount { val value = 2 }
-  case object _3 extends BombCount { val value = 3 }
-  case object _4 extends BombCount { val value = 4 }
-  case object _5 extends BombCount { val value = 5 }
-  case object _6 extends BombCount { val value = 6 }
-  case object _7 extends BombCount { val value = 7 }
-  case object _8 extends BombCount { val value = 8 }
 
   def fromGrid(grid: IndexedSeq[IndexedSeq[BombNoBomb]]): IndexedSeq[IndexedSeq[Option[BombCount]]] = {
     val size_y = grid.size
@@ -90,7 +90,7 @@ object BombCount {
       val dc = if (y + 1 < size_y)                   grid(y + 1)(x)     else NoBomb
       val dr = if (y + 1 < size_y && x + 1 < size_x) grid(y + 1)(x + 1) else NoBomb
 
-      BombCount(Vector(ul, uc, ur, cl, cr, dl, dc, dr).count(_ == IsBomb))
+      BombCount fromInt Vector(ul, uc, ur, cl, cr, dl, dc, dr).count(_ == IsBomb)
     }
 
     grid.indices map { y =>
@@ -104,10 +104,11 @@ object BombCount {
     }
   }
 
-  def apply(n: Int) =
+  private def fromInt(n: Int) =
     n match {
-      case 0 => _0 ; case 1 => _1 ; case 2 => _2 ; case 3 => _3
-      case 4 => _4 ; case 5 => _5 ; case 6 => _6 ; case 7 => _7 ; case 8 => _8
+      case 0 => BombCount_0
+      case 1 => BombCount_1 ; case 2 => BombCount_2 ; case 3 => BombCount_3 ; case 4 => BombCount_4
+      case 5 => BombCount_5 ; case 6 => BombCount_6 ; case 7 => BombCount_7 ; case 8 => BombCount_8
       case _ => throw new IllegalArgumentException(s"BombCount must be [0..8]")
     }
 }
