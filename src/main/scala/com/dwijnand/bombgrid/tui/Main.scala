@@ -44,7 +44,7 @@ object Main {
       val dc = if (y + 1 < size_y)                   grid(y + 1)(x)     else NoBomb
       val dr = if (y + 1 < size_y && x + 1 < size_x) grid(y + 1)(x + 1) else NoBomb
 
-      Vector(ul, uc, ur, cl, cr, dl, dc, dr).collect { case IsBomb => 1 }.sum
+      Vector(ul, uc, ur, cl, cr, dl, dc, dr).count(_ == IsBomb)
     }
 
     val grid = {
