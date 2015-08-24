@@ -12,10 +12,15 @@ object Main {
     val size = (16, 16)
     val bombCount = 51
 
-    val coords = for (y <- 0 until size._2; x <- 0 until size._1) yield (x, y)
+    val (bombsCoords, rng2) = {
+      val coords = for (y <- 0 until size._2; x <- 0 until size._1) yield (x, y)
+      val (shuffledCoords, rng2) = rng.shuffle(coords)
+      (shuffledCoords.take(bombCount).toSet[(Int, Int)].contains _, rng2)
+    }
 
-    val (shuffledCoords, rng2) = rng.shuffle(coords)
-    val bombsCoords = shuffledCoords.take(bombCount).toSet[(Int, Int)].contains _
+    sealed trait BombNoBomb
+    case object IsBomb extends BombNoBomb
+    case object NoBomb extends BombNoBomb
 
     val bombNoBombs =
       0 until size._2 map { y =>
@@ -24,10 +29,28 @@ object Main {
         }
       }
 
+    def sumBombs(grid: IndexedSeq[IndexedSeq[((Int, Int), BombNoBomb)]], xy: (Int, Int)): Int = {
+      val (x, y) = xy
+      val (size_x, size_y) = size
+
+      val ul = if (y > 0 && x > 0)          grid(y - 1)(x - 1)._2 else NoBomb
+      val uc = if (y > 0)                   grid(y - 1)(x)._2     else NoBomb
+      val ur = if (y > 0 && x + 1 < size_x) grid(y - 1)(x + 1)._2 else NoBomb
+
+      val cl = if (x > 0)          grid(y)(x - 1)._2 else NoBomb
+      val cr = if (x + 1 < size_x) grid(y)(x + 1)._2 else NoBomb
+
+      val dl = if (y + 1 < size_y && x > 0)          grid(y + 1)(x - 1)._2 else NoBomb
+      val dc = if (y + 1 < size_y)                   grid(y + 1)(x)._2     else NoBomb
+      val dr = if (y + 1 < size_y && x + 1 < size_x) grid(y + 1)(x + 1)._2 else NoBomb
+
+      Vector(ul, uc, ur, cl, cr, dl, dc, dr).collect { case IsBomb => 1 }.sum
+    }
+
     val grid = {
       bombNoBombs map { row =>
         row map {
-          case (xy, NoBomb) => DigitCell(sumBombs(bombNoBombs, xy, size))
+          case (xy, NoBomb) => DigitCell(sumBombs(bombNoBombs, xy))
           case (_, IsBomb)  => BombCell
         }
       }
@@ -50,30 +73,8 @@ object Main {
 
     ()
   }
-
-  def sumBombs(grid: IndexedSeq[IndexedSeq[((Int, Int), BombNoBomb)]], xy: (Int, Int), size: (Int, Int)): Int = {
-    val (x, y) = xy
-    val (size_x, size_y) = size
-
-    val ul = if (y > 0 && x > 0)          grid(y - 1)(x - 1)._2 else NoBomb
-    val uc = if (y > 0)                   grid(y - 1)(x)._2     else NoBomb
-    val ur = if (y > 0 && x + 1 < size_x) grid(y - 1)(x + 1)._2 else NoBomb
-
-    val cl = if (x > 0)          grid(y)(x - 1)._2 else NoBomb
-    val cr = if (x + 1 < size_x) grid(y)(x + 1)._2 else NoBomb
-
-    val dl = if (y + 1 < size_y && x > 0)          grid(y + 1)(x - 1)._2 else NoBomb
-    val dc = if (y + 1 < size_y)                   grid(y + 1)(x)._2     else NoBomb
-    val dr = if (y + 1 < size_y && x + 1 < size_x) grid(y + 1)(x + 1)._2 else NoBomb
-
-    Vector(ul, uc, ur, cl, cr, dl, dc, dr).collect { case IsBomb => 1 }.sum
-  }
 }
 
-trait BombNoBomb
-case object IsBomb extends BombNoBomb
-case object NoBomb extends BombNoBomb
-
-trait Cell
+sealed trait Cell
 case object BombCell extends Cell
 final case class DigitCell(n: Int) extends Cell
