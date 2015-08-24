@@ -35,6 +35,8 @@ lazy val commonSettings = Settings(
   wartremoverWarnings  -= Wart.Serializable, // Create any sealed hierachy with case class/object & BOOM :(
   wartremoverWarnings  -= Wart.Throw,        // Breaks on tuple destructuring
 
+  libraryDependencies += "jline" % "jline" % "2.13",
+
   initialCommands in console += "\nimport com.dwijnand.bombgrid._",
 
   parallelExecution in Test := true,
