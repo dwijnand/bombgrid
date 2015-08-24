@@ -18,21 +18,14 @@ object Main {
       (shuffledCoords.take(bombCount).toSet[(Int, Int)].contains _, rng2)
     }
 
-    val bombNoBombs =
-      0 until size._2 map { y =>
-        0 until size._1 map { x =>
-          if (bombsCoords((x, y))) IsBomb else NoBomb
-        }
-      }
+    val bombNoBombs = Grid.create(size)((x, y) => if (bombsCoords((x, y))) IsBomb else NoBomb)
 
-    val bombCounts: IndexedSeq[IndexedSeq[Option[BombCount]]] = BombCount fromGrid bombNoBombs
+    val bombCounts = BombCount fromGrid bombNoBombs
 
     val grid =
-      bombCounts.map { row =>
-        row.map { bc =>
-          val cell = bc.map(DigitCell).getOrElse(BombCell)
-          Block(cell, revealed = true)
-        }
+      bombCounts map { bc =>
+        val cell = bc.map(DigitCell).getOrElse(BombCell)
+        Block(cell, revealed = true)
       }
 
     grid foreach { row =>
@@ -60,6 +53,35 @@ sealed trait BombNoBomb
 case object IsBomb extends BombNoBomb
 case object NoBomb extends BombNoBomb
 
+final class Grid[+T] private (val size: (Int, Int), val rows: IndexedSeq[IndexedSeq[T]]) {
+  def map[U](f: T => U) = new Grid(size, rows map (_ map f))
+  def foreach[U](f: IndexedSeq[T] => U) = rows foreach f
+  def apply(idx: Int) = rows(idx)
+  def mapWithCoords[U](f: (Int, Int, T) => U) = {
+    val newRows =
+      rows.indices map { y =>
+        val row = rows(y)
+        row.indices map { x =>
+          f(x, y, row(x))
+        }
+      }
+    new Grid(size, newRows)
+  }
+
+}
+
+object Grid {
+  def create[T](size: (Int, Int))(f: (Int, Int) => T): Grid[T] = {
+    val rows =
+      0 until size._2 map { y =>
+        0 until size._1 map { x =>
+          f(x, y)
+        }
+      }
+    new Grid(size, rows)
+  }
+}
+
 sealed trait BombCount extends Any { def value: Int }
 case object BombCount_0 extends BombCount { val value = 0 }
 case object BombCount_1 extends BombCount { val value = 1 }
@@ -70,13 +92,12 @@ case object BombCount_5 extends BombCount { val value = 5 }
 case object BombCount_6 extends BombCount { val value = 6 }
 case object BombCount_7 extends BombCount { val value = 7 }
 case object BombCount_8 extends BombCount { val value = 8 }
+
 object BombCount {
+  def fromGrid(grid: Grid[BombNoBomb]): Grid[Option[BombCount]] = {
+    val (size_x, size_y) = grid.size
 
-  def fromGrid(grid: IndexedSeq[IndexedSeq[BombNoBomb]]): IndexedSeq[IndexedSeq[Option[BombCount]]] = {
-    val size_y = grid.size
-    val size_x = grid.head.size // TODO: Grid type
-
-    def sumBombs(grid: IndexedSeq[IndexedSeq[BombNoBomb]], xy: (Int, Int)): BombCount = {
+    def sumBombs(grid: Grid[BombNoBomb], xy: (Int, Int)): BombCount = {
       val (x, y) = xy
 
       val ul = if (y > 0 && x > 0)          grid(y - 1)(x - 1) else NoBomb
@@ -93,14 +114,9 @@ object BombCount {
       BombCount fromInt Vector(ul, uc, ur, cl, cr, dl, dc, dr).count(_ == IsBomb)
     }
 
-    grid.indices map { y =>
-      val row = grid(y)
-      row.indices map { x =>
-        row(x) match {
-          case NoBomb => Some(sumBombs(grid, (x, y)))
-          case IsBomb => None
-        }
-      }
+    grid mapWithCoords {
+      case (x, y, NoBomb) => Some(sumBombs(grid, (x, y)))
+      case (_, _, IsBomb) => None
     }
   }
 
