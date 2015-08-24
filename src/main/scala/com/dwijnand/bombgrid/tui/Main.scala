@@ -29,7 +29,7 @@ object Main {
         }
       }
 
-    def sumBombs(grid: IndexedSeq[IndexedSeq[BombNoBomb]], xy: (Int, Int)): Int = {
+    def sumBombs(grid: IndexedSeq[IndexedSeq[BombNoBomb]], xy: (Int, Int)): BombCount = {
       val (x, y) = xy
       val (size_x, size_y) = size
 
@@ -44,33 +44,37 @@ object Main {
       val dc = if (y + 1 < size_y)                   grid(y + 1)(x)     else NoBomb
       val dr = if (y + 1 < size_y && x + 1 < size_x) grid(y + 1)(x + 1) else NoBomb
 
-      Vector(ul, uc, ur, cl, cr, dl, dc, dr).count(_ == IsBomb)
+      BombCount(Vector(ul, uc, ur, cl, cr, dl, dc, dr).count(_ == IsBomb))
     }
 
-    val grid = {
+    val grid: IndexedSeq[IndexedSeq[Block]] = {
       bombNoBombs.indices map { y =>
         val row = bombNoBombs(y)
         row.indices map { x =>
-          row(x) match {
-            case NoBomb => DigitCell(sumBombs(bombNoBombs, (x, y)))
-            case IsBomb => BombCell
-          }
+          val cell =
+            row(x) match {
+              case NoBomb => DigitCell(sumBombs(bombNoBombs, (x, y)))
+              case IsBomb => BombCell
+            }
+          Block(cell, revealed = false)
         }
       }
     }
 
     grid foreach { row =>
-      println(row.map {
-        case BombCell     => BLACK + BOLD + "*" + RESET
-        case DigitCell(0) => " "
-        case DigitCell(1) => BLUE + BOLD + "1" + RESET
-        case DigitCell(2) => GREEN + "2" + RESET
-        case DigitCell(3) => RED + BOLD + "3" + RESET
-        case DigitCell(4) => BLUE + "4" + RESET
-        case DigitCell(5) => RED + "5" + RESET
-        case DigitCell(6) => CYAN + "6" + RESET
-        case DigitCell(7) => MAGENTA + "7" + RESET
-        case DigitCell(8) => BOLD + "8" + RESET
+      println(row.map { b =>
+        if (b.revealed) b.cell match {
+          case BombCell                => BLACK + BOLD + "*" + RESET
+          case DigitCell(BombCount._0) => " "
+          case DigitCell(BombCount._1) => BLUE + BOLD + "1" + RESET
+          case DigitCell(BombCount._2) => GREEN + "2" + RESET
+          case DigitCell(BombCount._3) => RED + BOLD + "3" + RESET
+          case DigitCell(BombCount._4) => BLUE + "4" + RESET
+          case DigitCell(BombCount._5) => RED + "5" + RESET
+          case DigitCell(BombCount._6) => CYAN + "6" + RESET
+          case DigitCell(BombCount._7) => MAGENTA + "7" + RESET
+          case DigitCell(BombCount._8) => BOLD + "8" + RESET
+        } else "#"
       }.mkString)
     }
 
@@ -78,6 +82,27 @@ object Main {
   }
 }
 
+sealed trait BombCount extends Any { def value: Int }
+object BombCount {
+  case object _0 extends BombCount { val value = 0 }
+  case object _1 extends BombCount { val value = 1 }
+  case object _2 extends BombCount { val value = 2 }
+  case object _3 extends BombCount { val value = 3 }
+  case object _4 extends BombCount { val value = 4 }
+  case object _5 extends BombCount { val value = 5 }
+  case object _6 extends BombCount { val value = 6 }
+  case object _7 extends BombCount { val value = 7 }
+  case object _8 extends BombCount { val value = 8 }
+  def apply(n: Int) =
+    n match {
+      case 0 => _0 ; case 1 => _1 ; case 2 => _2 ; case 3 => _3
+      case 4 => _4 ; case 5 => _5 ; case 6 => _6 ; case 7 => _7 ; case 8 => _8
+      case _ => throw new IllegalArgumentException(s"BombCount must be [0..8]")
+    }
+}
+
 sealed trait Cell
 case object BombCell extends Cell
-final case class DigitCell(n: Int) extends Cell
+final case class DigitCell(n: BombCount) extends Cell
+
+final case class Block(cell: Cell, revealed: Boolean)
