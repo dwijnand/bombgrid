@@ -18,10 +18,6 @@ object Main {
       (shuffledCoords.take(bombCount).toSet[(Int, Int)].contains _, rng2)
     }
 
-    sealed trait BombNoBomb
-    case object IsBomb extends BombNoBomb
-    case object NoBomb extends BombNoBomb
-
     val bombNoBombs =
       0 until size._2 map { y =>
         0 until size._1 map { x =>
@@ -29,37 +25,15 @@ object Main {
         }
       }
 
-    def sumBombs(grid: IndexedSeq[IndexedSeq[BombNoBomb]], xy: (Int, Int)): BombCount = {
-      val (x, y) = xy
-      val (size_x, size_y) = size
+    val bombCounts: IndexedSeq[IndexedSeq[Option[BombCount]]] = BombCount fromGrid bombNoBombs
 
-      val ul = if (y > 0 && x > 0)          grid(y - 1)(x - 1) else NoBomb
-      val uc = if (y > 0)                   grid(y - 1)(x)     else NoBomb
-      val ur = if (y > 0 && x + 1 < size_x) grid(y - 1)(x + 1) else NoBomb
-
-      val cl = if (x > 0)          grid(y)(x - 1) else NoBomb
-      val cr = if (x + 1 < size_x) grid(y)(x + 1) else NoBomb
-
-      val dl = if (y + 1 < size_y && x > 0)          grid(y + 1)(x - 1) else NoBomb
-      val dc = if (y + 1 < size_y)                   grid(y + 1)(x)     else NoBomb
-      val dr = if (y + 1 < size_y && x + 1 < size_x) grid(y + 1)(x + 1) else NoBomb
-
-      BombCount(Vector(ul, uc, ur, cl, cr, dl, dc, dr).count(_ == IsBomb))
-    }
-
-    val grid: IndexedSeq[IndexedSeq[Block]] = {
-      bombNoBombs.indices map { y =>
-        val row = bombNoBombs(y)
-        row.indices map { x =>
-          val cell =
-            row(x) match {
-              case NoBomb => DigitCell(sumBombs(bombNoBombs, (x, y)))
-              case IsBomb => BombCell
-            }
-          Block(cell, revealed = false)
+    val grid =
+      bombCounts.map { row =>
+        row.map { bc =>
+          val cell = bc.map(DigitCell).getOrElse(BombCell)
+          Block(cell, revealed = true)
         }
       }
-    }
 
     grid foreach { row =>
       println(row.map { b =>
@@ -82,6 +56,10 @@ object Main {
   }
 }
 
+sealed trait BombNoBomb
+case object IsBomb extends BombNoBomb
+case object NoBomb extends BombNoBomb
+
 sealed trait BombCount extends Any { def value: Int }
 object BombCount {
   case object _0 extends BombCount { val value = 0 }
@@ -93,6 +71,39 @@ object BombCount {
   case object _6 extends BombCount { val value = 6 }
   case object _7 extends BombCount { val value = 7 }
   case object _8 extends BombCount { val value = 8 }
+
+  def fromGrid(grid: IndexedSeq[IndexedSeq[BombNoBomb]]): IndexedSeq[IndexedSeq[Option[BombCount]]] = {
+    val size_y = grid.size
+    val size_x = grid.head.size // TODO: Grid type
+
+    def sumBombs(grid: IndexedSeq[IndexedSeq[BombNoBomb]], xy: (Int, Int)): BombCount = {
+      val (x, y) = xy
+
+      val ul = if (y > 0 && x > 0)          grid(y - 1)(x - 1) else NoBomb
+      val uc = if (y > 0)                   grid(y - 1)(x)     else NoBomb
+      val ur = if (y > 0 && x + 1 < size_x) grid(y - 1)(x + 1) else NoBomb
+
+      val cl = if (x > 0)          grid(y)(x - 1) else NoBomb
+      val cr = if (x + 1 < size_x) grid(y)(x + 1) else NoBomb
+
+      val dl = if (y + 1 < size_y && x > 0)          grid(y + 1)(x - 1) else NoBomb
+      val dc = if (y + 1 < size_y)                   grid(y + 1)(x)     else NoBomb
+      val dr = if (y + 1 < size_y && x + 1 < size_x) grid(y + 1)(x + 1) else NoBomb
+
+      BombCount(Vector(ul, uc, ur, cl, cr, dl, dc, dr).count(_ == IsBomb))
+    }
+
+    grid.indices map { y =>
+      val row = grid(y)
+      row.indices map { x =>
+        row(x) match {
+          case NoBomb => Some(sumBombs(grid, (x, y)))
+          case IsBomb => None
+        }
+      }
+    }
+  }
+
   def apply(n: Int) =
     n match {
       case 0 => _0 ; case 1 => _1 ; case 2 => _2 ; case 3 => _3
